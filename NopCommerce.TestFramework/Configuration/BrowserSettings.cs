@@ -11,5 +11,8 @@ namespace NopCommerce.TestFramework.Configuration
         public string Browser { get; set; } = "chromium";
 
         public bool Headless { get; set; } = true;
+        public bool IgnoreHTTPSErrors { get; set; } = false;
+
+        public int DefaultTimeout { get; set; } = 30000;
     }
 }

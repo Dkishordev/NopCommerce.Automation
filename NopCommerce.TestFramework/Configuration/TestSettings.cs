@@ -17,5 +17,6 @@ namespace NopCommerce.TestFramework.Configuration
         public DatabaseSettings Database { get; set; } = new();
 
         public BrowserSettings Browser { get; set; } = new();
+        public TestUserSettings TestUser { get; set; } = new();
     }
 }

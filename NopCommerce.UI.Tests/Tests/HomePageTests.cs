@@ -4,7 +4,7 @@ using NopCommerce.TestFramework.Browser;
 using NopCommerce.TestFramework.Configuration;
 using NUnit.Framework;
 
-namespace NopCommerce.UI.Tests
+namespace NopCommerce.UI.Tests.Tests
 {
     [TestFixture]
     public class HomePageTests
@@ -20,7 +20,7 @@ namespace NopCommerce.UI.Tests
 
             var browserFactory = new BrowserFactory();
 
-            _browser = await browserFactory.CreateAsync(_playwright);
+            _browser = await browserFactory.CreateBrowserAsync(_playwright);
 
             _page = await _browser.NewPageAsync();
         }

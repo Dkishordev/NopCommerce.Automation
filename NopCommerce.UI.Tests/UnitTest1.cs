@@ -1,6 +1,6 @@
 namespace NopCommerce.UI.Tests
 {
-    public class Tests
+    public class Tests1
     {
         [SetUp]
         public void Setup()
