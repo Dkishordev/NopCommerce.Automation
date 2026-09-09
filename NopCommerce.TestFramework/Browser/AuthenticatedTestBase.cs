@@ -1,6 +1,5 @@
 ﻿using Microsoft.Playwright;
-using NopCommerce.TestFramework.Configuration;
-using NUnit.Framework;
+using NopCommerce.TestFramework.Authentication;
 
 namespace NopCommerce.TestFramework.Browser;
 
@@ -9,17 +8,12 @@ public abstract class AuthenticatedTestBase : BaseTest
     protected override async Task ConfigureContextAsync(
         BrowserNewContextOptions options)
     {
-        var authStatePath =
-            Path.Combine(
-                TestContext.CurrentContext.WorkDirectory,
-                "auth",
-                "customer-state.json");
+        var authManager =
+            new AuthenticationStateManager();
 
-        if (File.Exists(authStatePath))
-        {
-            options.StorageStatePath = authStatePath;
-        }
+        await authManager.EnsureAuthenticatedStateAsync();
 
-        await base.ConfigureContextAsync(options);
+        options.StorageStatePath =
+            authManager.StateFilePath;
     }
 }

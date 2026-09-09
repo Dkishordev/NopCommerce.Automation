@@ -1,54 +1,58 @@
 ﻿using Microsoft.Playwright;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NopCommerce.TestFramework.Configuration;
 
-namespace NopCommerce.TestFramework.Browser
+namespace NopCommerce.TestFramework.Browser;
+
+public sealed class BrowserFactory
 {
-    public class BrowserFactory
+    public async Task<IPlaywright> CreatePlaywrightAsync()
     {
-        public async Task<IPlaywright> CreatePlaywrightAsync()
+        return await Playwright.CreateAsync();
+    }
+
+    public async Task<IBrowser> CreateBrowserAsync(
+        IPlaywright playwright)
+    {
+        var settings = ConfigurationManager.Settings.Browser;
+
+        var options = new BrowserTypeLaunchOptions
         {
-            return await Playwright.CreateAsync();
-        }
+            Headless = settings.Headless
+        };
 
-        public async Task<IBrowser> CreateBrowserAsync(
-            IPlaywright playwright)
+        return settings.Browser.ToLowerInvariant() switch
         {
-            var settings = ConfigurationManager.Settings.Browser;
+            "chromium" =>
+                await playwright.Chromium.LaunchAsync(options),
 
-            var options = new BrowserTypeLaunchOptions
-            {
-                Headless = settings.Headless
-            };
+            "firefox" =>
+                await playwright.Firefox.LaunchAsync(options),
 
-            return settings.Browser.ToLowerInvariant() switch
-            {
-                "chromium" =>
-                    await playwright.Chromium.LaunchAsync(options),
+            "webkit" =>
+                await playwright.Webkit.LaunchAsync(options),
 
-                "firefox" =>
-                    await playwright.Firefox.LaunchAsync(options),
+            _ => throw new ArgumentException(
+                $"Unsupported browser: {settings.Browser}")
+        };
+    }
 
-                "webkit" =>
-                    await playwright.Webkit.LaunchAsync(options),
+    public BrowserNewContextOptions CreateContextOptions()
+    {
+        var settings = ConfigurationManager.Settings.Browser;
 
-                _ => throw new ArgumentException(
-                    $"Unsupported browser: {settings.Browser}")
-            };
-        }
-
-        public BrowserNewContextOptions CreateContextOptions()
+        return new BrowserNewContextOptions
         {
-            var settings = ConfigurationManager.Settings.Browser;
+            IgnoreHTTPSErrors = settings.IgnoreHTTPSErrors,
 
-            return new BrowserNewContextOptions
+            ViewportSize = new ViewportSize
             {
-                IgnoreHTTPSErrors = settings.IgnoreHTTPSErrors
-            };
-        }
+                Width = 1440,
+                Height = 900
+            },
+
+            Locale = "en-GB",
+
+            ColorScheme = ColorScheme.Light
+        };
     }
 }

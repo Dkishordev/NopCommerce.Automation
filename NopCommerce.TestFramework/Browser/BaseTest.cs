@@ -1,16 +1,14 @@
 ﻿using Microsoft.Playwright;
 using NUnit.Framework;
+using NopCommerce.TestFramework.Configuration;
 
 namespace NopCommerce.TestFramework.Browser;
 
 public abstract class BaseTest
 {
     protected IPlaywright Playwright { get; private set; } = null!;
-
     protected IBrowser Browser { get; private set; } = null!;
-
     protected IBrowserContext Context { get; private set; } = null!;
-
     protected IPage Page { get; private set; } = null!;
 
     private BrowserFactory _browserFactory = null!;
@@ -33,11 +31,19 @@ public abstract class BaseTest
         await ConfigureContextAsync(contextOptions);
 
         Context =
-            await Browser.NewContextAsync(
-                contextOptions);
+            await Browser.NewContextAsync(contextOptions);
 
         Page =
             await Context.NewPageAsync();
+
+        var browserSettings =
+            ConfigurationManager.Settings.Browser;
+
+        Page.SetDefaultTimeout(
+            browserSettings.DefaultTimeout);
+
+        Page.SetDefaultNavigationTimeout(
+            browserSettings.NavigationTimeout);
 
         await Context.Tracing.StartAsync(
             new TracingStartOptions
@@ -46,6 +52,9 @@ public abstract class BaseTest
                 Snapshots = true,
                 Sources = true
             });
+
+        TestContext.Progress.WriteLine(
+            $"Starting test: {TestContext.CurrentContext.Test.Name}");
 
         await OnTestStartAsync();
     }
@@ -69,68 +78,139 @@ public abstract class BaseTest
     [TearDown]
     public async Task BaseTearDown()
     {
-        await OnTestEndAsync();
+        try
+        {
+            await OnTestEndAsync();
 
-        var testStatus =
-            TestContext.CurrentContext.Result.Outcome.Status;
+            var failed =
+                TestContext.CurrentContext.Result.Outcome.Status
+                == NUnit.Framework.Interfaces.TestStatus.Failed;
 
-        var testName =
-            TestContext.CurrentContext.Test.Name;
+            if (failed)
+            {
+                await CaptureFailureArtifactsAsync();
+            }
+            else
+            {
+                await StopTracingAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            TestContext.Progress.WriteLine(
+                $"Teardown error: {ex}");
+        }
+        finally
+        {
+            await CleanupAsync();
+        }
+    }
 
-        var artifactsDirectory =
+    private async Task CaptureFailureArtifactsAsync()
+    {
+        var artifactDirectory =
             Path.Combine(
                 TestContext.CurrentContext.WorkDirectory,
                 "TestResults",
                 "Artifacts");
 
-        Directory.CreateDirectory(artifactsDirectory);
+        Directory.CreateDirectory(artifactDirectory);
 
-        if (testStatus ==
-            NUnit.Framework.Interfaces.TestStatus.Failed)
+        var testName =
+            SanitizeFileName(
+                TestContext.CurrentContext.Test.Name);
+
+        var uniqueId =
+            Guid.NewGuid().ToString("N")[..8];
+
+        var screenshotPath =
+            Path.Combine(
+                artifactDirectory,
+                $"{testName}_{uniqueId}.png");
+
+        var tracePath =
+            Path.Combine(
+                artifactDirectory,
+                $"{testName}_{uniqueId}.zip");
+
+        if (Page != null)
         {
-            var safeTestName =
-                string.Join(
-                    "_",
-                    testName.Split(
-                        Path.GetInvalidFileNameChars()));
-
-            var screenshotPath =
-                Path.Combine(
-                    artifactsDirectory,
-                    $"{safeTestName}.png");
-
-            var tracePath =
-                Path.Combine(
-                    artifactsDirectory,
-                    $"{safeTestName}.zip");
-
             await Page.ScreenshotAsync(
                 new PageScreenshotOptions
                 {
                     Path = screenshotPath,
                     FullPage = true
                 });
+        }
 
+        if (Context != null)
+        {
             await Context.Tracing.StopAsync(
                 new TracingStopOptions
                 {
                     Path = tracePath
                 });
-
-            TestContext.AddTestAttachment(
-                screenshotPath);
-
-            TestContext.AddTestAttachment(
-                tracePath);
         }
-        else
+
+        TestContext.AddTestAttachment(screenshotPath);
+        TestContext.AddTestAttachment(tracePath);
+
+        TestContext.Progress.WriteLine(
+            $"Screenshot: {screenshotPath}");
+
+        TestContext.Progress.WriteLine(
+            $"Trace: {tracePath}");
+    }
+
+    private async Task StopTracingAsync()
+    {
+        if (Context != null)
         {
             await Context.Tracing.StopAsync();
         }
+    }
 
-        await Context.CloseAsync();
-        await Browser.CloseAsync();
+    private async Task CleanupAsync()
+    {
+        try
+        {
+            if (Context != null)
+                await Context.CloseAsync();
+        }
+        catch
+        {
+            // Ignore cleanup failures.
+        }
 
-        Playwright.Dispose();
+        try
+        {
+            if (Browser != null)
+                await Browser.CloseAsync();
+        }
+        catch
+        {
+            // Ignore cleanup failures.
+        }
+
+        try
+        {
+            Playwright?.Dispose();
+        }
+        catch
+        {
+            // Ignore cleanup failures.
+        }
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        foreach (var character in Path.GetInvalidFileNameChars())
+        {
+            value = value.Replace(character, '_');
+        }
+
+        return value.Length > 150
+            ? value[..150]
+            : value;
     }
 }
