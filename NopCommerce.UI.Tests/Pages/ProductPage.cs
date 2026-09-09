@@ -7,17 +7,23 @@ using System.Threading.Tasks;
 
 namespace NopCommerce.UI.Tests.Pages
 {
-    public class ProductPage
+    public sealed class ProductPage : BasePage
     {
-        private readonly IPage _page;
+        private ILocator AddToCartButton =>
+            Page.Locator(".add-to-cart-button").First;
+
+        private ILocator ProductTitle =>
+            Page.Locator(".product-name");
 
         public ProductPage(IPage page)
+            : base(page)
         {
-            _page = page;
         }
 
-        private ILocator AddToCartButton =>
-            _page.Locator(".add-to-cart-button").First;
+        public async Task<string> GetProductNameAsync()
+        {
+            return await ProductTitle.InnerTextAsync();
+        }
 
         public async Task AddToCartAsync()
         {

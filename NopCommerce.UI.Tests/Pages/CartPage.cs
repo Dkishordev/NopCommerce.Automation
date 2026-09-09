@@ -7,25 +7,33 @@ using System.Threading.Tasks;
 
 namespace NopCommerce.UI.Tests.Pages
 {
-    public class CartPage
+    public sealed class CartPage : BasePage
     {
-        private readonly IPage _page;
 
-        public CartPage(IPage page)
+        public CartPage(IPage page):base(page)
         {
-            _page = page;
         }
 
+        private ILocator CartItems =>
+            Page.Locator("table.cart tbody tr");
+
         private ILocator CheckoutButton =>
-            _page.Locator(".checkout-button");
+            Page.Locator(".checkout-button");
 
         private ILocator TermOfService =>
-            _page.Locator("#termsofservice");
+            Page.Locator("#termsofservice");
+
+        public async Task<int> GetItemCountAsync()
+        {
+            return await CartItems.CountAsync();
+        }
 
         public async Task CheckoutAsync()
         {
             await TermOfService.ClickAsync();
             await CheckoutButton.ClickAsync();
+            await Page.WaitForLoadStateAsync(
+                LoadState.NetworkIdle);
         }
     }
 }

@@ -1,46 +1,44 @@
 ﻿using Microsoft.Playwright;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
+namespace NopCommerce.UI.Tests.Pages;
 
-namespace NopCommerce.UI.Tests.Pages
+public sealed class LoginPage : BasePage
 {
-    public class LoginPage
+    private ILocator Email =>
+        Page.Locator("#Email");
+
+    private ILocator Password =>
+        Page.Locator("#Password");
+
+    private ILocator LoginButton =>
+        Page.Locator("button.login-button");
+
+    public LoginPage(IPage page)
+        : base(page)
     {
-        private readonly IPage _page;
+    }
 
-        public LoginPage(IPage page)
-        {
-            _page = page;
-        }
+    public async Task OpenAsync()
+    {
+        await NavigateAsync("login");
+    }
 
-        private ILocator Email =>
-            _page.Locator("#Email");
+    public async Task LoginAsync(
+        string email,
+        string password)
+    {
+        await Email.FillAsync(email);
+        await Password.FillAsync(password);
 
-        private ILocator Password =>
-            _page.Locator("#Password");
+        await LoginButton.ClickAsync();
 
-        private ILocator LoginButton =>
-            _page.Locator("button.login-button");
+        await Page.WaitForLoadStateAsync(
+            LoadState.NetworkIdle);
+    }
 
-        public async Task NavigateAsync(string baseUrl)
-        {
-            await _page.GotoAsync(
-                $"{baseUrl.TrimEnd('/')}/login");
-        }
-
-        public async Task LoginAsync(
-            string email,
-            string password)
-        {
-            await Email.FillAsync(email);
-
-            await Password.FillAsync(password);
-
-            await LoginButton.ClickAsync();
-        }
+    public async Task<bool> IsDisplayedAsync()
+    {
+        return await LoginButton.IsVisibleAsync();
     }
 }

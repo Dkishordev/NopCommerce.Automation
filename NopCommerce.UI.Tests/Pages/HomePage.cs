@@ -7,26 +7,28 @@ using System.Threading.Tasks;
 
 namespace NopCommerce.UI.Tests.Pages
 {
-    public class HomePage
+    public sealed class HomePage: BasePage
     {
-        private readonly IPage _page;
-
-        public HomePage(IPage page)
-        {
-            _page = page;
-        }
-
         private ILocator SearchBox =>
-            _page.Locator("#small-searchterms");
+            Page.Locator("#small-searchterms");
 
         private ILocator SearchButton =>
-            _page.Locator("button.search-box-button");
+            Page.Locator("button.search-box-button");
+
+        public HomePage(IPage page): base(page) 
+        {
+        }
+
+ 
 
         public async Task SearchAsync(string searchTerm)
         {
             await SearchBox.FillAsync(searchTerm);
 
             await SearchButton.ClickAsync();
+
+            await Page.WaitForLoadStateAsync(
+                LoadState.NetworkIdle);
         }
     }
 }

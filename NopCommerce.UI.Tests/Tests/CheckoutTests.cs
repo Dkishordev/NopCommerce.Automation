@@ -2,12 +2,12 @@
 using NopCommerce.TestFramework.Browser;
 using NopCommerce.TestFramework.Configuration;
 using NopCommerce.UI.Tests.Pages;
-using NUnit.Framework;
+
 
 namespace NopCommerce.UI.Tests.Tests;
 
 [TestFixture]
-public class CheckoutTests : BaseTest
+public sealed class CheckoutTests : AuthenticatedTestBase
 {
     [Test]
     public async Task CustomerCanLoginAndAddProductToCart()
@@ -31,13 +31,8 @@ public class CheckoutTests : BaseTest
             new CartPage(Page);
 
         // 1. Login
-        await loginPage.NavigateAsync(
-            settings.Application.BaseUrl);
-
-        await loginPage.LoginAsync(
-            settings.TestUser.Email,
-            settings.TestUser.Password);
-
+        await Page.GotoAsync(
+              settings.Application.BaseUrl);
         // 2. Search product
         await homePage.SearchAsync("Apple MacBook Pro");
 

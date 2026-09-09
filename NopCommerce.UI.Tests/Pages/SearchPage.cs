@@ -7,21 +7,28 @@ using System.Threading.Tasks;
 
 namespace NopCommerce.UI.Tests.Pages
 {
-    public class SearchPage
+    public sealed class SearchPage : BasePage
     {
-        private readonly IPage _page;
+        private ILocator Products =>
+       Page.Locator(".product-item");
 
         public SearchPage(IPage page)
+            : base(page)
         {
-            _page = page;
         }
 
-        private ILocator FirstProduct =>
-            _page.Locator(".product-title a").First;
+        public async Task<int> GetProductCountAsync()
+        {
+            return await Products.CountAsync();
+        }
 
         public async Task OpenFirstProductAsync()
         {
-            await FirstProduct.ClickAsync();
+            await Products
+                .First
+                .Locator(".product-title a")
+                .ClickAsync();
         }
+
     }
 }
