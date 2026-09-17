@@ -18,5 +18,6 @@ namespace NopCommerce.TestFramework.Configuration
 
         public BrowserSettings Browser { get; set; } = new();
         public TestUserSettings TestUser { get; set; } = new();
+        public TestUserSettings TestRegisterUser { get; set; } = new();
     }
 }

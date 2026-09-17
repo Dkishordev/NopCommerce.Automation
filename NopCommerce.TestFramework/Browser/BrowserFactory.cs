@@ -44,15 +44,7 @@ public sealed class BrowserFactory
         {
             IgnoreHTTPSErrors = settings.IgnoreHTTPSErrors,
 
-            ViewportSize = new ViewportSize
-            {
-                Width = 1440,
-                Height = 900
-            },
-
-            Locale = "en-GB",
-
-            ColorScheme = ColorScheme.Light
+        
         };
     }
 }
