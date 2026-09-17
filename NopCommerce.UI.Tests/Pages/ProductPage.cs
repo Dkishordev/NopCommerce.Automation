@@ -15,6 +15,15 @@ namespace NopCommerce.UI.Tests.Pages
         private ILocator ProductTitle =>
             Page.Locator(".product-name");
 
+        private ILocator ProductPrice =>
+            Page.Locator(".product-price");
+
+        private ILocator Products =>
+        Page.Locator(".item-box");
+
+        private ILocator ListProducts =>
+        Page.Locator(".product-item");
+
         public ProductPage(IPage page)
             : base(page)
         {
@@ -23,6 +32,27 @@ namespace NopCommerce.UI.Tests.Pages
         public async Task<string> GetProductNameAsync()
         {
             return await ProductTitle.InnerTextAsync();
+        }
+
+        public async Task<string> GetProductPriceAsync() 
+        { 
+            return await ProductPrice.InnerTextAsync();
+        }
+
+        public async Task OpenFirstProductAsync()
+        {
+            await ListProducts
+                .First
+                .Locator(".product-title a")
+                .ClickAsync();
+        }
+
+        public async Task ClickFirstProductAsync()
+        {
+            await Products
+                .First
+                .Locator(".picture a")
+                .ClickAsync();
         }
 
         public async Task AddToCartAsync()
